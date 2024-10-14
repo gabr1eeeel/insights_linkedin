@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsightLinkedIn</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/icon.png') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chgibb/css-spinners@2.2.1/css/spinner/three-quarters.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        header form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%; 
+            margin: auto;
+            border: none;
+            box-shadow: none;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #120F16; /* Cor de background */
+            color: #f4f4f4; /* Cor do texto */
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #5B21B6; /* Cor primária */
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #5B21B6; /* Borda na cor primária */
+            border-radius: 5px;
+            background-color: #1E1E2E; /* Fundo do input */
+            color: #f4f4f4; /* Cor do texto no input */
+            outline: none; /* Remove o outline padrão */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Adiciona sombra */
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #5B21B6; /* Cor primária */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #4E1B93; /* Cor de hover */
+        }
+        #result {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        img {
+            border-radius: 50%;
+            max-width: 100%;
+            height: auto;
+        }
+        h2 {
+            color: #5B21B6; /* Cor primária */
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <form id="name-form">
+            <h1>InsightLinkedIn</h1>
+            <input type="text" name="name" placeholder="Digite o nome e chaves para encontrar o LinkedIn da pessoa." required>
+            <button id="magic-button" type="submit">Trazer Insights</button>
+        </form>
+    </header>
+    <div id="spinner" style="text-align: center; display: none">
+        <span class="three-quarters-loader" style="width: 100px; height: 100px; border-radius: 50%; border-width: 12px;"></span>
+    </div>
+    <main id="result" style="display: none">
+        <div>
+            <img id="profile-pic" src="" alt="Profile Picture" style="width: 300px; margin-bottom: 20px;">
+        </div>
+        <div>
+            <h2>Sumário</h2>
+            <p id="summary"></p>
+        </div>
+        <div>
+            <h2>Fatos Interessantes</h2>
+            <div id="facts"></div>
+        </div>
+    </main>
+
+    <script>
+        const form = document.getElementById("name-form");
+        const spinner = document.getElementById("spinner");
+        const result = document.getElementById("result");
+
+        form.addEventListener("submit", (ev) => {
+            ev.preventDefault();
+
+            result.style.display = "none";
+            spinner.style.display = "block";
+
+            const formData = new FormData(form);
+
+            fetch("/process", {method: "POST", body: formData})
+                .then(response => {
+                    if (response.ok) return response.json();
+                    throw new Error("POST request failed");
+                })
+                .then(data => {
+                    document.getElementById("profile-pic").src = data.picture_url;
+                    document.getElementById("summary").textContent = data.summary_and_facts.summary;
+                    createHtmlList(document.getElementById("facts"), data.summary_and_facts.facts);
+
+                    spinner.style.display = "none";
+                    result.style.display = "block";
+                })
+                .catch(error => {
+                    console.error(error);
+                    spinner.style.display = "none";
+                    alert("Ocorreu um erro ao buscar os dados.");
+                });
+        });
+
+        function createHtmlList(element, items) {
+            const ul = document.createElement("ul");
+
+            items.forEach(item => {
+                const li = document.createElement("li");
+                li.textContent = item;
+                ul.appendChild(li);
+            });
+
+            element.innerHTML = "";
+            element.appendChild(ul);
+        }
+    </script>
+</body>
+</html>
